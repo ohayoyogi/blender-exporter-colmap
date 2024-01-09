@@ -1,0 +1,27 @@
+name: Release zip
+
+on:
+  push:
+    tags:
+      - '*'
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v3
+    - name: zip files
+      run: |
+        cd ../
+        zip -r blender-exporter-colmap_${{ github.ref_name }}.zip blender-exporter-colmap/__init__.py
+    - name: Create Release
+      uses: softprops/action-gh-release@v1
+      with:
+        name: "Release ${{ github.ref_name }}"
+        tag_name: "${{ github.ref_name }}"
+        draft: true
+        files: |
+          blender-exporter-colmap_${{ github.ref_name }}.zip
+        prerelease: false
+        target_commitish: main
