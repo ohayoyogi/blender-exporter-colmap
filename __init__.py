@@ -86,6 +86,7 @@ class BlenderExporterForColmap(bpy.types.Operator, ExportHelper):
                 
                 # IMAGE_ID, QW, QX, QY, QZ, TX, TY, TZ, CAMERA_ID, NAME
                 f_img.write(f'{idx+1} {qw} {qx} {qy} {qz} {tx} {ty} {tz} {idx+1} {filename}.jpg\n')
+                # POINTS2D[] as (X, Y, POINT3D_ID)
                 f_img.write(f'\n')
 
                 bpy.context.scene.camera = cam
