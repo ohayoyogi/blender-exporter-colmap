@@ -15,8 +15,7 @@ jobs:
     - uses: actions/checkout@v3
     - name: zip files
       run: |
-        cd ../
-        zip -r blender-exporter-colmap_${{ github.ref_name }}.zip blender-exporter-colmap/__init__.py
+        ./build.sh ${{ github.ref_name }}
     - name: Create Release
       uses: softprops/action-gh-release@v1
       with:
@@ -24,6 +23,6 @@ jobs:
         tag_name: "${{ github.ref_name }}"
         draft: true
         files: |
-          ../blender-exporter-colmap_${{ github.ref_name }}.zip
+          ./dist/blender-exporter-colmap_${{ github.ref_name }}.zip
         prerelease: false
         target_commitish: main
