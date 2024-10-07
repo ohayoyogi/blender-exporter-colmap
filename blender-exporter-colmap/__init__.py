@@ -14,6 +14,7 @@ bl_info = {
 import bpy
 from bpy.props import StringProperty
 from bpy_extras.io_utils import ExportHelper
+from ext.read_write_model import write_model
 
 import mathutils
 from pathlib import Path
