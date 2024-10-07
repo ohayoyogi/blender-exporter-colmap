@@ -1,9 +1,16 @@
+import numpy as np
+from pathlib import Path
+import mathutils
+from . ext.read_write_model import write_model, Camera, Image
+from bpy_extras.io_utils import ExportHelper
+from bpy.props import StringProperty
+import bpy
 bl_info = {
     "name": "Scene exporter for colmap",
     "description": "Generates a dataset for colmap by exporting blender camera poses and rendering scene.",
     "author": "Ohayoyogi",
-    "version": (0,1,0),
-    "blender": (3,6,0),
+    "version": (0, 1, 0),
+    "blender": (3, 6, 0),
     "location": "File/Export",
     "warning": "",
     "wiki_url": "https://github.com/ohayoyogi/blender-exporter-colmap",
@@ -11,26 +18,18 @@ bl_info = {
     "category": "Import-Export"
 }
 
-import bpy
-from bpy.props import StringProperty
-from bpy_extras.io_utils import ExportHelper
-from . ext.read_write_model import write_model, Camera, Image
-
-import mathutils
-from pathlib import Path
-import numpy as np
 
 class BlenderExporterForColmap(bpy.types.Operator, ExportHelper):
-   
+
     filename_ext = "."
-    
+
     directory: StringProperty()
-    
+
     filter_folder = True
 
     def export_dataset(self, context, dirpath: Path, format: str):
         scene = context.scene
-        scene_cameras = [ i for i in scene.objects if i.type == "CAMERA"]
+        scene_cameras = [i for i in scene.objects if i.type == "CAMERA"]
 
         output_format = format if format in ['.txt', '.bin'] else '.txt'
 
@@ -108,7 +107,7 @@ class BlenderExporterForColmap(bpy.types.Operator, ExportHelper):
     def execute_(self, context, format):
         dirpath = Path(self.directory)
         if not dirpath.is_dir():
-            return { "WARNING", "Illegal directory was passed: " + self.directory }
+            return {"WARNING", "Illegal directory was passed: " + self.directory}
 
         context.window_manager.progress_begin(0, 100)
         for progress in self.export_dataset(context, dirpath, format):
@@ -116,6 +115,7 @@ class BlenderExporterForColmap(bpy.types.Operator, ExportHelper):
         context.window_manager.progress_end()
 
         return {"FINISHED"}
+
 
 class BlenderExporterForColmapBinary(BlenderExporterForColmap):
     bl_idname = "object.colmap_dataset_generator_binary"
@@ -125,6 +125,7 @@ class BlenderExporterForColmapBinary(BlenderExporterForColmap):
     def execute(self, context):
         return super().execute_(context, '.bin')
 
+
 class BlenderExporterForColmapText(BlenderExporterForColmap):
     bl_idname = "object.colmap_dataset_generator_text"
     bl_label = "Export as colmap dataset with text format"
@@ -132,6 +133,7 @@ class BlenderExporterForColmapText(BlenderExporterForColmap):
 
     def execute(self, context):
         return super().execute_(context, '.txt')
+
 
 def _blender_export_operator_function(topbar_file_import, context):
     topbar_file_import.layout.operator(
@@ -141,14 +143,17 @@ def _blender_export_operator_function(topbar_file_import, context):
         BlenderExporterForColmapBinary.bl_idname, text="Colmap dataset (.bin)"
     )
 
+
 def register():
     bpy.utils.register_class(BlenderExporterForColmapBinary)
     bpy.utils.register_class(BlenderExporterForColmapText)
     bpy.types.TOPBAR_MT_file_export.append(_blender_export_operator_function)
 
+
 def unregister():
     bpy.utils.unregister_class(BlenderExporterForColmapBinary)
     bpy.utils.unregister_class(BlenderExporterForColmapText)
+
 
 if __name__ == "__main__":
     register()
