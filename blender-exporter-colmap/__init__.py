@@ -45,20 +45,54 @@ class BlenderExporterForColmap(bpy.types.Operator, ExportHelper):
         for idx, cam in enumerate(sorted(scene_cameras, key=lambda x: x.name_full + ".jpg")):
             camera_id = idx+1
             filename = f'{cam.name_full}.jpg'
-            width = scene.render.resolution_x
-            height = scene.render.resolution_y
-            focal_length = cam.data.lens
-            sensor_width = cam.data.sensor_width
-            sensor_height = cam.data.sensor_height
-            fx = focal_length * width / sensor_width
-            fy = focal_length * height / sensor_height
-            # fx, fy, cx, cy, k1, k2, p1, p2
-            params = [fx, fy, width/2, height/2, 0, 0, 0, 0]
+            #width = scene.render.resolution_x
+            #height = scene.render.resolution_y
+            #focal_length = cam.data.lens
+            #sensor_width = cam.data.sensor_width
+            #sensor_height = cam.data.sensor_height
+            #fx = focal_length * width / sensor_width
+            #fy = focal_length * height / sensor_height
+            
+            camd = cam.data
+            focal_length_mm = camd.lens
+            resolution_x_in_px = scene.render.resolution_x
+            resolution_y_in_px = scene.render.resolution_y
+            scale = scene.render.resolution_percentage / 100
+            sensor_width_in_mm = camd.sensor_width
+            sensor_height_in_mm = camd.sensor_height
+            
+            # I don't want to think about non-square pixels.
+            assert( scene.render.pixel_aspect_x == scene.render.pixel_aspect_y )
+            assert( scene.render.pixel_aspect_x == 1.0 )
+            
+            focal_length_pixels = None
+            if (camd.sensor_fit == 'VERTICAL'):
+                # sensor height has been specified by artist.
+                focal_length_pixels = (focal_length_mm * resolution_y_in_px*scale) / sensor_height_in_mm
+                
+            else: # 'HORIZONTAL' and 'AUTO'
+                # sensor width has been specified by artist.
+                focal_length_pixels = (focal_length_mm * resolution_x_in_px*scale) / sensor_width_in_mm
+
+            tmpfi = open("/tmp/debug/%s"%cam.name_full, 'w')
+            tmpfi.write( "paspect: %f %f\n"%(scene.render.pixel_aspect_x, scene.render.pixel_aspect_y ) )
+            tmpfi.write( "sfit: %s\n"%(camd.sensor_fit) )
+            tmpfi.write( "ss: %f %f\n"%(sensor_width_in_mm, sensor_height_in_mm) )
+
+
+            # Parameters of intrinsic calibration matrix K
+            cx = resolution_x_in_px*scale / 2
+            cy = resolution_y_in_px*scale / 2
+            skew = 0 # only use rectangular pixels
+            
+            
+            # fx, fy, cx, cy,    k1, k2, p1, p2
+            params = [focal_length_pixels, focal_length_pixels, cx, cy,    0, 0, 0, 0]
             cameras[camera_id] = Camera(
                 id=camera_id,
                 model='OPENCV',
-                width=width,
-                height=height,
+                width=resolution_x_in_px,
+                height=resolution_y_in_px,
                 params=params
             )
 
